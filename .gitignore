@@ -1,0 +1,21 @@
+# .gitignore
+# Node & build
+node_modules/
+dist/
+*.log
+*.dmg
+*.exe
+*.tmp.dmg
+PlexThing-darwin-x64/
+PlexThing-win32-x64/
+.vscode/
+
+# Secrets
+config.json
+.env
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

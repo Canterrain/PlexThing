@@ -1,0 +1,65 @@
+{
+  "name": "PlexThing",
+  "version": "0.0.5",
+  "description": "Plex Server Dashboard for Car Thing",
+  "main": "main.js",
+  "author": "Your Name",
+  "scripts": {
+    "start": "electron .",
+    
+    "pack:mac": "electron-packager . PlexThing --platform=darwin --arch=universal --overwrite --icon=assets/MyIcon.icns",
+    "pack:win": "electron-packager . PlexThing --platform=win32 --arch=x64 --overwrite --icon=assets/icon.ico",
+    "pack:linux": "electron-packager . PlexThing --platform=linux --arch=x64 --overwrite",
+    "pack": "electron-packager . PlexThing --platform=darwin,win32,linux --arch=x64 --overwrite",
+
+    "build:win": "electron-builder --win --x64"
+  },
+  "files": [
+    "main.js",
+    "preload.js",
+    "index.html",
+    "renderer.js",
+    "styles.css",
+    "ADB/**",
+    "superbird-custom-webapp/react_webapp/build/**"
+  ],
+  "build": {
+    "appId": "com.anoraker.plexthing",
+    "productName": "PlexThing",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "ADB/",
+        "to": "ADB",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "adbkit": "2.11.1",
+    "bonjour": "^3.5.0",
+    "check-disk-space": "3.4.0",
+    "plex-api": "^3.1.0",
+    "systeminformation": "^5.11.16",
+    "ws": "^8.13.0",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "electron": "^25.2.0",
+    "electron-packager": "^17.1.2",
+    "electron-builder": "^24.7.0"
+  }
+}

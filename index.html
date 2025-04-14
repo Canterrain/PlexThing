@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PlexThing Helper</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="container">
+    <h1>PlexThing Helper</h1>
+
+    <div class="input-group">
+      <label for="plex-url">Plex Server URL:</label>
+      <input type="text" id="plex-url" placeholder="http://<PLEX_SERVER_IP>:32400">
+    </div>
+
+    <div class="input-group">
+      <label for="plex-token">Plex Token:</label>
+      <input type="text" id="plex-token" placeholder="<YOUR_PLEX_TOKEN>">
+    </div>
+
+    <button id="connect-btn">Connect to Plex</button>
+
+    <div id="plex-status">Plex Server Status: Not Connected</div>
+    <div id="carthing-status">Car Thing Status: Not Connected</div>
+
+    <hr>
+
+    <button id="manual-adb-btn">Connect to Car Thing</button>
+    <button id="push-build-btn">Push Build to Car Thing</button>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
+

@@ -2,12 +2,12 @@
 
 <h3 align="center">PlexThing Icon</h3>
 <p align="center">
-  <img src="./assets/icon1024.png" alt="PlexThing Icon" width="120" style="border-radius: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.2);" />
+  <img src="./assets/icon1024.png" alt="" width="120">
 </p>
 
 <h3 align="center">Real Car Thing Running PlexThing</h3>
 <p align="center">
-  <img src="./assets/PlexThing_Dashboard.jpg" alt="Spotify Car Thing running PlexThing" width="600" style="border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);" />
+  <img src="./assets/PlexThing_Dashboard.jpg" alt="" width="600">
 </p>
 
 

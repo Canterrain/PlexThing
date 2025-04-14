@@ -1,11 +1,9 @@
 # PlexThing
 
-<h3 align="center">PlexThing Icon</h3>
 <p align="center">
   <img src="./assets/icon1024.png" alt="" width="120">
 </p>
 
-<h3 align="center">Real Car Thing Running PlexThing</h3>
 <p align="center">
   <img src="./assets/PlexThing_Dashboard.jpg" alt="" width="600">
 </p>

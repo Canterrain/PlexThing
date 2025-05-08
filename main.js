@@ -1,4 +1,3 @@
-// main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -9,7 +8,10 @@ const http = require('http');
 const https = require('https');
 const { parseString } = require('xml2js');
 const PlexAPI = require('plex-api');
+const dgram = require('dgram');
 
+app.commandLine.appendSwitch('allow-insecure-localhost');
+app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
 
 let mainWindow;
 let plexClient = null;
@@ -23,12 +25,18 @@ if (process.platform.startsWith("win")) {
 } else {
   ADB_PATH = path.join(__dirname, "ADB", "linux", "adb");
 }
+
+// Only chmod if NOT inside an ASAR archive
 if (process.platform !== 'win32') {
-  try {
-    fs.chmodSync(ADB_PATH, 0o755);
-    console.log(`${ADB_PATH} is now executable.`);
-  } catch (err) {
-    console.error("Error setting ADB permissions:", err);
+  if (!process.mainModule?.filename.includes('app.asar')) {
+    try {
+      fs.chmodSync(ADB_PATH, 0o755);
+      console.log(`${ADB_PATH} is now executable.`);
+    } catch (err) {
+      console.error("Error setting ADB permissions:", err);
+    }
+  } else {
+    console.log("Skipping chmod: running from ASAR package.");
   }
 }
 
@@ -36,7 +44,7 @@ if (process.platform !== 'win32') {
 const CONFIG_FILE = path.join(app.getPath('userData'), "config.json");
 const DEFAULT_CONFIG = {
   plex_server_url: "http://<PLEX_SERVER_IP>:32400",
-  plex_token: "<YOUR_PLEX_TOKEN>",
+  plex_token: "<YOUR_PLEX_TOKEN>"
 };
 
 function loadConfig() {
@@ -55,6 +63,21 @@ function saveConfig(config) {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 4));
   } catch (err) {
     console.error("Error saving config:", err);
+  }
+}
+
+// --- Local Network Prompt
+function triggerLocalNetworkPrompt() {
+  if (process.platform === 'darwin') {
+    try {
+      const socket = dgram.createSocket('udp4');
+      socket.send('Hello', 5353, '224.0.0.251', () => {
+        console.log('Sent dummy packet to trigger Local Network Permission');
+        socket.close();
+      });
+    } catch (err) {
+      console.error('Failed to trigger local network prompt:', err);
+    }
   }
 }
 
@@ -79,24 +102,19 @@ function runAdbReverse() {
   });
 }
 
-
-// --- Helper: Car Thing status
+// --- Car Thing Status
 async function getCarThingStatus() {
   return new Promise(resolve => {
-    // Check if any WebSocket clients (Car Thing) are connected
     if (wss && [...wss.clients].some(client => client.readyState === WebSocket.OPEN)) {
       return resolve("Connected");
     }
-
-    // Fallback: check if ADB reverse is active (especially useful on Windows)
     adbReverseActive(active => {
       resolve(active ? "Connected (ADB)" : "Not connected");
     });
   });
 }
 
-
-// --- Helper: Fetch artwork
+// --- Artwork Helpers
 function buildArtworkUrl(thumb, token) {
   const config = loadConfig();
   let base = config.plex_server_url.replace(/\/$/, "");
@@ -118,7 +136,7 @@ function fetchArtworkData(url) {
   });
 }
 
-// --- Get Plex Status
+// --- Plex Status
 async function getNetworkFromSessions() {
   if (!plexClient) return { sent_mbps: "0", recv_mbps: "0" };
   try {
@@ -172,10 +190,12 @@ async function getServerStatus() {
       const recent = await plexClient.query("/library/recentlyAdded");
       const item = recent.MediaContainer?.Metadata?.[0];
       if (item) {
+        const baseTitle = item.grandparentTitle || item.title;
+        const library = item.librarySectionTitle || "Unknown";
         recentlyAdded = {
-          title: item.title,
+          title: baseTitle,
           addedAt: new Date(item.addedAt * 1000).toISOString(),
-          library: item.librarySectionTitle || "Unknown"
+          library
         };
       }
     } catch (e) {
@@ -250,22 +270,15 @@ function broadcast(data) {
   }
 }
 
-// --- Broadcast Status
 function startStatusBroadcast() {
   setInterval(async () => {
     const status = await getServerStatus();
-
-    // Nullify nowPlaying if no streams or no Plex client
     if (!plexClient || status.activeStreams.count === 0) {
       status.activeStreams.nowPlaying = null;
     }
-
     const payload = {
       type: "serverStatus",
-      serverStatus: {
-        serverUp: status.plexStatus.connected
-        // serverVersion removed entirely
-      },
+      serverStatus: { serverUp: status.plexStatus.connected },
       libraryStats: status.libraryStats,
       recentlyAdded: status.recentlyAdded,
       networkBandwidth: status.networkBandwidth,
@@ -275,15 +288,12 @@ function startStatusBroadcast() {
         details: status.transcoding.details
       }
     };
-
     broadcast(payload);
   }, 5000);
 }
 
-
 // --- IPC
 ipcMain.handle("get-config", async () => loadConfig());
-
 ipcMain.handle("connect-plex", async (e, config) => {
   saveConfig(config);
   try {
@@ -296,9 +306,7 @@ ipcMain.handle("connect-plex", async (e, config) => {
     return { success: false, error: e.toString() };
   }
 });
-
 ipcMain.handle("get-server-status", async () => getServerStatus());
-
 ipcMain.handle("manual-adb-reverse", async () => {
   return new Promise(resolve => {
     if (!fs.existsSync(ADB_PATH)) {
@@ -306,92 +314,70 @@ ipcMain.handle("manual-adb-reverse", async () => {
       return;
     }
     execFile(ADB_PATH, ["reverse", "tcp:8891", "tcp:8891"], (error, stdout) => {
-      if (error) {
-        resolve({ success: false, error: error.toString() });
-      } else {
-        resolve({ success: true, output: stdout.trim() });
-      }
+      if (error) resolve({ success: false, error: error.toString() });
+      else resolve({ success: true, output: stdout.trim() });
     });
   });
 });
-
-
-ipcMain.handle("push-build", async (event, buildPath) => {
+ipcMain.handle("push-build", async () => {
   return new Promise((resolve) => {
-    console.log("Pushing build to Car Thing using buildPath:", buildPath);
+    let buildPath;
 
-    let absoluteBuildPath;
-
-    // Development mode or unbundled app
     if (process.env.NODE_ENV === 'development' || !process.resourcesPath) {
-      absoluteBuildPath = path.resolve(buildPath);
+      // Development path (e.g., during testing)
+      buildPath = path.join(__dirname, "react_webapp", "build");
     } else {
-      // Try default packaged location
-      absoluteBuildPath = path.join(process.resourcesPath, 'app', 'superbird-custom-webapp', 'react_webapp', 'build');
-      if (!fs.existsSync(absoluteBuildPath)) {
-        // Fallback if "app" isn't present in packaged structure
-        absoluteBuildPath = path.join(process.resourcesPath, 'superbird-custom-webapp', 'react_webapp', 'build');
+      // Production packaged app — inside .app bundle
+      const packagedAppRoot = path.join(process.resourcesPath, "app");
+      buildPath = path.join(packagedAppRoot, "react_webapp", "build");
+
+      if (!fs.existsSync(buildPath)) {
+        // Fallback if not inside "app"
+        buildPath = path.join(process.resourcesPath, "react_webapp", "build");
       }
     }
 
-    console.log("Using build folder:", absoluteBuildPath);
-
-    if (!fs.existsSync(absoluteBuildPath)) {
-      resolve({ success: false, error: `Build folder not found at ${absoluteBuildPath}` });
-      return;
+    if (!fs.existsSync(buildPath)) {
+      return resolve({ success: false, error: `Build folder not found at ${buildPath}` });
     }
 
-    // Optional: list files to verify contents
-    const listFilesRecursive = (dir) => {
-      let results = [];
-      fs.readdirSync(dir).forEach(file => {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
-        if (stat && stat.isDirectory()) {
-          results = results.concat(listFilesRecursive(fullPath));
-        } else {
-          results.push(fullPath);
-        }
-      });
-      return results;
-    };
+    console.log("Pushing build from:", buildPath);
 
-    const allFiles = listFilesRecursive(absoluteBuildPath);
-    console.log("Files to be pushed:", allFiles.length);
-
-    // ADB steps
+    // Mount root as read-write, remove existing webapp, push new one, then reboot
     execFile(ADB_PATH, ["shell", "mount", "-o", "remount,rw", "/"], (err1) => {
-      if (err1) {
-        resolve({ success: false, error: "Mount error: " + err1.toString() });
-        return;
-      }
+      if (err1) return resolve({ success: false, error: "Mount error: " + err1.toString() });
 
       execFile(ADB_PATH, ["shell", "rm", "-rf", "/usr/share/qt-superbird-app/webapp/*"], (err2) => {
-        if (err2) {
-          console.error("Error removing old webapp folder (continuing):", err2);
-        }
+        if (err2) console.error("Warning: couldn't delete old webapp folder");
 
-        execFile(ADB_PATH, ["push", ".", "/usr/share/qt-superbird-app/webapp/"], { cwd: absoluteBuildPath }, (err3, stdout3) => {
-          if (err3) {
-            resolve({ success: false, error: "Push error: " + err3.toString() });
-          } else {
+        execFile(
+          ADB_PATH,
+          ["push", ".", "/usr/share/qt-superbird-app/webapp/"],
+          { cwd: buildPath },
+          (err3, stdout3) => {
+            if (err3) {
+              return resolve({ success: false, error: "Push error: " + err3.toString() });
+            }
+
             execFile(ADB_PATH, ["reboot"], (err4) => {
               if (err4) {
-                resolve({ success: false, error: "Reboot error: " + err4.toString() });
-              } else {
-                resolve({ success: true, output: stdout3.trim() });
+                return resolve({ success: false, error: "Reboot error: " + err4.toString() });
               }
+
+              resolve({ success: true, output: stdout3.trim() });
             });
           }
-        });
+        );
       });
     });
   });
 });
 
 
-// --- App Ready
+
+// --- App lifecycle
 app.whenReady().then(() => {
+  triggerLocalNetworkPrompt();
   createWindow();
   startWebSocketServer();
   startStatusBroadcast();

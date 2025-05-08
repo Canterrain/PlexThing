@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "./static/css/main.8dc2e1a9.css",
+    "main.js": "./static/js/main.b3e7efda.js",
+    "static/media/plexthing.png": "./static/media/plexthing.71c1adcbcf7cb4a6d8f5.png",
+    "index.html": "./index.html",
+    "main.8dc2e1a9.css.map": "./static/css/main.8dc2e1a9.css.map",
+    "main.b3e7efda.js.map": "./static/js/main.b3e7efda.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8dc2e1a9.css",
+    "static/js/main.b3e7efda.js"
+  ]
+}

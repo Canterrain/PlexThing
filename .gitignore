@@ -6,8 +6,7 @@ dist/
 *.dmg
 *.exe
 *.tmp.dmg
-PlexThing-darwin-x64/
-PlexThing-win32-x64/
+dist
 .vscode/
 
 # Secrets

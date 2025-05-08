@@ -1,26 +1,29 @@
 {
   "name": "PlexThing",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Plex Server Dashboard for Car Thing",
   "main": "main.js",
-  "author": "Your Name",
+  "author": "Anoraker",
   "scripts": {
-    "start": "electron .",
-    
-    "pack:mac": "electron-packager . PlexThing --platform=darwin --arch=universal --overwrite --icon=assets/MyIcon.icns",
-    "pack:win": "electron-packager . PlexThing --platform=win32 --arch=x64 --overwrite --icon=assets/icon.ico",
-    "pack:linux": "electron-packager . PlexThing --platform=linux --arch=x64 --overwrite",
-    "pack": "electron-packager . PlexThing --platform=darwin,win32,linux --arch=x64 --overwrite",
-
-    "build:win": "electron-builder --win --x64"
-  },
+  "start": "electron .",
+  "clean": "rm -rf dist react_webapp",
+  "copy-client": "rm -rf react_webapp && mkdir -p react_webapp && cp -R ../PlexThing-Client/react_webapp/build react_webapp/",
+  "pack:mac:x64": "npm run copy-client && electron-packager . PlexThing --platform=darwin --arch=x64 --overwrite --icon=assets/MyIcon.icns --out=dist",
+  "pack:mac:arm64": "npm run copy-client && electron-packager . PlexThing --platform=darwin --arch=arm64 --overwrite --icon=assets/MyIcon.icns --out=dist",
+  "pack:mac": "npm run pack:mac:x64 && npm run pack:mac:arm64",
+  "dmg:x64": "electron-installer-dmg dist/PlexThing-darwin-x64/PlexThing.app PlexThing-x64 --overwrite --out=dist/dmg --icon=assets/MyIcon.icns",
+  "dmg:arm64": "electron-installer-dmg dist/PlexThing-darwin-arm64/PlexThing.app PlexThing-arm64 --overwrite --out=dist/dmg --icon=assets/MyIcon.icns",
+  "pack:win": "electron-builder --win --x64",
+  "pack:linux": "electron-builder --linux --x64",
+  "pack-and-dmg:mac": "npm run clean && npm run pack:mac && npm run dmg:x64 && npm run dmg:arm64",
+  "release:mac": "npm run clean && npm run pack-and-dmg:mac"
+},
   "files": [
     "main.js",
     "preload.js",
     "index.html",
     "renderer.js",
     "styles.css",
-    "ADB/**",
     "superbird-custom-webapp/react_webapp/build/**"
   ],
   "build": {
@@ -32,6 +35,9 @@
     "files": [
       "**/*"
     ],
+    "asarUnpack": [
+      "ADB/**"
+    ],
     "extraResources": [
       {
         "from": "ADB/",
@@ -39,9 +45,25 @@
         "filter": ["**/*"]
       }
     ],
+    "mac": {
+      "target": ["dmg", "zip"],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null,
+      "icon": "assets/MyIcon.icns",
+      "extendInfo": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "NSLocalNetworkUsageDescription": "Allows PlexThing to discover and connect to Plex servers on your local network."
+      }
+    },
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage"
     },
     "nsis": {
       "oneClick": false,
@@ -59,7 +81,8 @@
   },
   "devDependencies": {
     "electron": "^25.2.0",
-    "electron-packager": "^17.1.2",
-    "electron-builder": "^24.7.0"
+    "electron-builder": "^24.7.0",
+    "electron-installer-dmg": "^5.0.1",
+    "electron-packager": "^17.1.2"
   }
 }

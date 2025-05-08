@@ -17,23 +17,14 @@ let mainWindow;
 let plexClient = null;
 
 // --- ADB path
-let baseADBPath;
-if (
-  process.resourcesPath &&
-  fs.existsSync(path.join(process.resourcesPath, "app.asar.unpacked"))
-) {
-  baseADBPath = path.join(process.resourcesPath, "app.asar.unpacked");
-} else {
-  baseADBPath = __dirname;
-}
-
 let ADB_PATH;
+
 if (process.platform.startsWith("win")) {
-  ADB_PATH = path.join(baseADBPath, "ADB", "win", "adb.exe");
+  ADB_PATH = path.join(process.resourcesPath, "ADB", "win", "adb.exe");
 } else if (process.platform.startsWith("darwin")) {
-  ADB_PATH = path.join(baseADBPath, "ADB", "mac", "adb");
+  ADB_PATH = path.join(process.resourcesPath, "ADB", "mac", "adb");
 } else {
-  ADB_PATH = path.join(baseADBPath, "ADB", "linux", "adb");
+  ADB_PATH = path.join(process.resourcesPath, "ADB", "linux", "adb");
 }
 
 

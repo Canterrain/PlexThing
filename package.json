@@ -36,7 +36,8 @@
       "**/*"
     ],
     "asarUnpack": [
-      "ADB/**"
+      "ADB/**",
+      "react_webapp/**"
     ],
     "extraResources": [
       {

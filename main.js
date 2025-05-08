@@ -323,19 +323,18 @@ ipcMain.handle("push-build", async () => {
   return new Promise((resolve) => {
     let buildPath;
 
-    if (process.env.NODE_ENV === 'development' || !process.resourcesPath) {
-      // Development path (e.g., during testing)
+    if (process.env.NODE_ENV === 'development') {
       buildPath = path.join(__dirname, "react_webapp", "build");
     } else {
-      // Production packaged app — inside .app bundle
-      const packagedAppRoot = path.join(process.resourcesPath, "app");
-      buildPath = path.join(packagedAppRoot, "react_webapp", "build");
+      // Normal production: try mac-style layout
+      buildPath = path.join(process.resourcesPath, "app", "react_webapp", "build");
 
+      // Windows or alternate layout fallback
       if (!fs.existsSync(buildPath)) {
-        // Fallback if not inside "app"
-        buildPath = path.join(process.resourcesPath, "react_webapp", "build");
+        buildPath = path.join(process.resourcesPath, "app.asar.unpacked", "react_webapp", "build");
       }
     }
+
 
     if (!fs.existsSync(buildPath)) {
       return resolve({ success: false, error: `Build folder not found at ${buildPath}` });

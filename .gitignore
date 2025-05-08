@@ -1,20 +1,25 @@
-# .gitignore
-# Node & build
+# Node modules & build outputs
 node_modules/
 dist/
 *.log
 *.dmg
 *.exe
 *.tmp.dmg
-dist
+
+# React build artifacts
+react_webapp/build/
+superbird-custom-webapp/
+*.map
+
+# Helper scripts and plist files
+build-mac-dmg.sh
+extendInfo.plist
+
+# Editor & OS files
 .vscode/
+.DS_Store
+Thumbs.db
 
 # Secrets
 config.json
 .env
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db

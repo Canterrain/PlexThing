@@ -1,62 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&display=swap');
+
 body {
-  background-color: #282c34;
-  color: #fff;
-  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #1f1f2e, #2a2a3c);
+  color: #e6e6f0;
+  font-family: 'Rubik', sans-serif;
   margin: 0;
-  padding: 20px;
+  padding: 24px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
 #container {
+  width: 100%;
   max-width: 600px;
-  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  padding: 24px 20px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 h1 {
   text-align: center;
+  font-size: 26px;
+  font-weight: 600;
   margin-bottom: 20px;
+  color: #ffffff;
 }
 
 .input-group {
-  margin-bottom: 15px;
+  margin-bottom: 18px;
 }
 
 label {
   display: block;
   font-size: 14px;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  color: #cfcfe3;
 }
 
 input[type="text"] {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #FF9900;
-  border-radius: 4px;
-  background-color: #3a3f47;
-  color: #fff;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
+input[type="text"]:focus-visible {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.25);
+}
+
 button {
-  background-color: #FF9900;
+  width: 100%;
+  background: linear-gradient(135deg, #ff9900, #ff6600);
   color: #fff;
   border: none;
-  padding: 10px 15px;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.25s ease;
+  margin-top: 4px;
 }
 
 button:hover {
-  background-color: #e68a00;
+  transform: scale(1.02);
+  filter: brightness(1.05);
 }
 
 button:active {
-  background-color: #cc7a00;
+  transform: scale(0.98);
 }
 
 #plex-status,
 #carthing-status {
-  margin-top: 10px;
-  font-size: 14px;
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: #bbbbcc;
   white-space: pre-wrap;
 }
